@@ -37,6 +37,7 @@ from anulation import Anulation
 from incident import Incident
 from cca import Cca
 from pdc import Pdc
+from recargas_app import Recargas
 
 #create spark session
 client = storage.Client()
@@ -145,8 +146,12 @@ if (type_file == "cca"):
     process_cca.run()
 
 if (type_file == "pdc"):
-    process_cca = Pdc(type_file,spark,input_path,mode_deploy,output)
-    process_cca.run()
+    process_pdc = Pdc(type_file,spark,input_path,mode_deploy,output)
+    process_pdc.run()
+
+if (type_file == "recargas"):
+    process_recargas = Recargas(type_file,spark,input_path,mode_deploy,output)
+    process_recargas.run()
 
 end_process_time = datetime.now().microsecond
 time_elapsed = end_process_time - start_process_time

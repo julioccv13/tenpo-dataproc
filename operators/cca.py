@@ -42,10 +42,10 @@ class Cca:
 			
 			try:
 				self.df_cca.filter(self.df_cca.NAME_FILE == name_file).coalesce(1).write.options(header='True', delimiter=',').csv(self.output+"CCA"+name_file+"/"+self.timestamp_bucket+"/")
-				logging.info(f"success when copy anulation-csv {name_file} to bucket \n")
+				logging.info(f"success when copy cca-csv {name_file} to bucket \n")
 
 			except Exception as e:
-				logging.error(f"failed when copy anulation-csv  {name_file} to bucket "+str(e)+"\n")
+				logging.error(f"failed when copy cca-csv  {name_file} to bucket "+str(e)+"\n")
 
 	def write_df_to_bigquery(self):
 
