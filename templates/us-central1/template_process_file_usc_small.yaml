@@ -17,7 +17,7 @@ placement:
       configBucket: mark-vii-conciliacion
       gceClusterConfig:
         metadata:
-          PIP_PACKAGES: PGPy cardutil findspark
+          PIP_PACKAGES: PGPy cardutil findspark xlrd openpyxl
         subnetworkUri: default
         serviceAccount: mark-vii-conciliacion@tenpo-datalake-sandbox.iam.gserviceaccount.com
         serviceAccountScopes:

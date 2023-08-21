@@ -23,13 +23,17 @@ class Recargas:
 		self.spark = spark
 		self.source = source
 		self.type_process = type_process
+		os.system('mkdir recargas_app')
+		get_files = "gsutil -m cp {0} ./recargas_app/".format(source)
+		os.system(get_files)
 
 	def convert_recargas_to_df(self):
 
-		df = self.spark.read.option("header", "false").option("encoding", "ISO-8859-1").load(self.source)
+		df1 = pd.read_excel('./recargas_app/reporte_servicio_recargas_-20230816.xlsx')
+		df = self.spark.createDataFrame(df1)
 		self.df_recargas = df.withColumn("DATE_PROCESS_FILE",lit(self.timestamp)).withColumn("NAME_FILE_ENTIRE", input_file_name()).withColumn("NAME_SPLIT",split("NAME_FILE_ENTIRE",'/')).withColumn("NAME_FILE",col("NAME_SPLIT").getItem(size("NAME_SPLIT") - 1)).withColumn("ID_ROW", udf(lambda : str(uuid4()), StringType())()).withColumn("CODIGO_MC",substring(df._c0,1,10)).withColumn("FECHA_HORA",substring(df._c0,11,19)).withColumn("ID_TERMINAL",substring(df._c0,20,8)).withColumn("OPERADOR",substring(df._c0,21,8)).withColumn("FONO",substring(df._c0,29,9)).withColumn("TIPO_TRX",substring(df._c0,38,11)).withColumn("ESTADO_TRX",substring(df._c0,49,8)).withColumn("COD_RESPUESTA",substring(df._c0,57,2)).withColumn("MSG_RESPUESTA",substring(df._c0,59,20)).withColumn("MONTO",substring(df._c0,79,6)).withColumn("COD_MANDANTE",substring(df._c0,85,9)).withColumn("COD_AUT_MDTE",substring(df._c0,94,12)).drop("NAME_FILE_ENTIRE").drop("NAME_SPLIT").drop("_c0")
 		
-		logging.info("success to convert_anulation_to_df")
+		logging.info("success to convert_recargas_app_to_df")
 
 	def write_files_csv_gcs(self):
 
