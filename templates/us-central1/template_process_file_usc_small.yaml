@@ -1,0 +1,76 @@
+jobs:
+- pysparkJob:
+    args:
+    - 'operators_files'
+    - 'input'
+    - 'type_file'
+    - 'output_path'
+    - 'mode_deploy'
+    mainPythonFileUri: 'pyspark_file'
+    properties:
+      spark.jars.packages: com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.24.2
+  stepId: pyspark1
+placement:
+  managedCluster:
+    clusterName: 'cluster-name'
+    config:
+      configBucket: mark-vii-conciliacion
+      gceClusterConfig:
+        metadata:
+          PIP_PACKAGES: PGPy cardutil findspark
+        subnetworkUri: default
+        serviceAccount: mark-vii-conciliacion@tenpo-datalake-sandbox.iam.gserviceaccount.com
+        serviceAccountScopes:
+        - https://www.googleapis.com/auth/cloud-platform
+        zoneUri: us-central1-c
+      initializationActions:
+      - executableFile: gs://mark-vii-conciliacion/artifacts/dataproc/pip-install.sh
+      masterConfig:
+        diskConfig:
+          bootDiskSizeGb: 100
+          bootDiskType: pd-ssd
+          localSsdInterface: SCSI
+        machineTypeUri: n1-standard-2
+        numInstances: 1
+      softwareConfig:
+        imageVersion: 2.0-debian10
+      workerConfig:
+        diskConfig:
+          bootDiskSizeGb: 100
+          bootDiskType: pd-ssd
+          localSsdInterface: SCSI
+        machineTypeUri: n1-standard-2
+        numInstances: 2
+parameters:
+- description: the managed cluster name prefix
+  fields:
+  - placement.managedCluster.clusterName
+  name: CLUSTER
+- description: the number of workers intances
+  fields:
+  - placement.managedCluster.config.workerConfig.numInstances
+  name: NUMWORKERS
+- description: the name of file that contain pyspark script
+  fields:
+  - jobs['pyspark1'].pysparkJob.mainPythonFileUri
+  name: JOBFILE
+- description: Path of the operators files
+  fields:
+  - jobs['pyspark1'].pysparkJob.args[0]
+  name: FILES_OPERATORS
+- description: Value of the file_name
+  fields:
+  - jobs['pyspark1'].pysparkJob.args[1]
+  name: INPUT
+- description: Value of the type_file
+  fields:
+  - jobs['pyspark1'].pysparkJob.args[2]
+  name: TYPE_FILE
+- description: Value of the output_path
+  fields:
+  - jobs['pyspark1'].pysparkJob.args[3]
+  name: OUTPUT
+- description: Value of mode deploy it can be test or prod
+  fields:
+  - jobs['pyspark1'].pysparkJob.args[4]
+  name: MODE_DEPLOY
