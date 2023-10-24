@@ -38,14 +38,21 @@ class Ipm:
 		os.system(move_files)
 
 	def write_files_bigquery(self):
+		
+		
 		os.system("hdfs dfs -put ./ipm_csv/ /")
-		df = self.spark.read.options(header='True',delimiter=',',encoding='UTF-16').csv("hdfs:///ipm_csv/")
-		df.printSchema()
-		df.show(10,truncate=False)
-		os.system("/usr/share/google/get_metadata_value attributes/dataproc-cluster-name>cluster_name.txt")
-		cluster_name = open("./cluster_name.txt","r").read()
-		df1 = df.select([regexp_replace(col(c), "�", "").alias(c) for c in df.columns]).withColumn("NAME_FILE_ENTIRE", input_file_name()).withColumn("NAME_FILE",regexp_replace("NAME_FILE_ENTIRE","hdfs://"+cluster_name+"-m/ipm_csv/","")).withColumn("ID_ROW", udf(lambda : str(uuid4()), StringType())()).withColumn("DATE_PROCESS_FILE",lit(self.timestamp)).withColumn('FECPROCES',to_timestamp( regexp_replace(concat(lit("20"),substring("NAME_FILE",25,14)),".T"," " ) ,"yyyyMMdd HHmmss" ))
-		df2 = df1.selectExpr('DATE_PROCESS_FILE', 'NAME_FILE', 'ID_ROW', 'MTI', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE9', 'DE10', 'DE12', 'DE14', 'DE22', 'DE23', 'DE24', 'DE25', 'DE26', 'DE30', 'DE31', 'DE32', 'DE33', 'DE37', 'DE38', 'DE40', 'DE41', 'DE42', 'DE43_NAME', 'DE43_SUBURB', 'DE43_POSTCODE', 'DE48', 'DE49', 'DE50', 'DE51', 'DE54', 'DE62', 'DE63', 'DE71', 'DE72', 'DE73', 'DE93', 'DE94', 'DE95', 'DE100', 'DE123', 'DE124', 'DE125', 'DE127', 'PDS0002', 'PDS0003', 'PDS0014', 'PDS0015', 'PDS0023', 'PDS0025', 'PDS0044', 'PDS0052', 'PDS0080', 'PDS0105', 'PDS0122', 'PDS0137', 'PDS0146', 'PDS0148', 'PDS0158', 'PDS0159', 'PDS0164', 'PDS0165', 'PDS0170', 'PDS0173', 'PDS0176', 'PDS0177', 'PDS0188', 'PDS0191', 'PDS0198', 'PDS0300', 'PDS0301', 'PDS0306', 'PDS0372', 'PDS0374', 'PDS0378', 'PDS0380', 'PDS0381', 'PDS0384', 'PDS0390', 'PDS0391', 'PDS0392', 'PDS0393', 'PDS0394', 'PDS0395', 'PDS0396', 'PDS0400', 'PDS0401', 'PDS0402', 'PDS0502', 'PDS1000', 'PDS1002', 'ICC_DATA','FECPROCES')
+		logging.info("checking files decrypted\n")
+		os.system("hdfs dfs -ls /ipm_csv/")
+		try:
+			df = self.spark.read.options(header='True',delimiter=',',encoding='UTF-16').csv("hdfs:///ipm_csv/")
+			df.printSchema()
+			df.show(10,truncate=False)
+			os.system("/usr/share/google/get_metadata_value attributes/dataproc-cluster-name>cluster_name.txt")
+			cluster_name = open("./cluster_name.txt","r").read()
+			df1 = df.select([regexp_replace(col(c), "�", "").alias(c) for c in df.columns]).withColumn("NAME_FILE_ENTIRE", input_file_name()).withColumn("NAME_FILE",regexp_replace("NAME_FILE_ENTIRE","hdfs://"+cluster_name+"-m/ipm_csv/","")).withColumn("ID_ROW", udf(lambda : str(uuid4()), StringType())()).withColumn("DATE_PROCESS_FILE",lit(self.timestamp)).withColumn('FECPROCES',to_timestamp( regexp_replace(concat(lit("20"),substring("NAME_FILE",25,14)),".T"," " ) ,"yyyyMMdd HHmmss" ))
+			df2 = df1.selectExpr('DATE_PROCESS_FILE', 'NAME_FILE', 'ID_ROW', 'MTI', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE9', 'DE10', 'DE12', 'DE14', 'DE22', 'DE23', 'DE24', 'DE25', 'DE26', 'DE30', 'DE31', 'DE32', 'DE33', 'DE37', 'DE38', 'DE40', 'DE41', 'DE42', 'DE43_NAME', 'DE43_SUBURB', 'DE43_POSTCODE', 'DE48', 'DE49', 'DE50', 'DE51', 'DE54', 'DE62', 'DE63', 'DE71', 'DE72', 'DE73', 'DE93', 'DE94', 'DE95', 'DE100', 'DE123', 'DE124', 'DE125', 'DE127', 'PDS0002', 'PDS0003', 'PDS0014', 'PDS0015', 'PDS0023', 'PDS0025', 'PDS0044', 'PDS0052', 'PDS0080', 'PDS0105', 'PDS0122', 'PDS0137', 'PDS0146', 'PDS0148', 'PDS0158', 'PDS0159', 'PDS0164', 'PDS0165', 'PDS0170', 'PDS0173', 'PDS0176', 'PDS0177', 'PDS0188', 'PDS0191', 'PDS0198', 'PDS0300', 'PDS0301', 'PDS0306', 'PDS0372', 'PDS0374', 'PDS0378', 'PDS0380', 'PDS0381', 'PDS0384', 'PDS0390', 'PDS0391', 'PDS0392', 'PDS0393', 'PDS0394', 'PDS0395', 'PDS0396', 'PDS0400', 'PDS0401', 'PDS0402', 'PDS0502', 'PDS1000', 'PDS1002', 'ICC_DATA','FECPROCES')
+		except Exception as e:
+			logging.error(f"failed when read csv decrypted:"+str(e)+"\n")
 		
 		try:
 			df2.write.format("bigquery") \
@@ -54,7 +61,7 @@ class Ipm:
              .save()
 
 		except Exception as e:
-			logging.error(f"faile when write in bigquery :"+str(e)+"\n")
+			logging.error(f"failed when write in bigquery :"+str(e)+"\n")
 
 	def run(self):
 		

@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-import pgpy
+import gnupg
 import cardutil
 import os
 import logging
@@ -10,10 +10,11 @@ from google.cloud import storage
 from uuid import uuid4
 from time import gmtime, strftime
 import pandas as pd
+import sys
 logging.basicConfig(level=logging.INFO)
 
 def get_secret(type_file):
-  secret_key_file = "gcloud secrets versions access latest --secret={0}_file_key > {0}_file.key".format(type_file)
+  secret_key_file = "gcloud secrets versions access latest --secret={0}_file_key > {0}_file.gpg".format(type_file)
   secret_password = "gcloud secrets versions access latest --secret={0}_password_file > {0}_password_file.key".format(type_file)
   try:
     os.system(secret_key_file)
@@ -30,24 +31,41 @@ def get_secret(type_file):
     #print(f"failed when get secret password {type_file}"+e)
     
 
-def decrypt(type_file,emsg,namefile):
+def decryption(type_file,namefile):
 
-  private_key_file = "{0}_file.key".format(type_file)
+  # Create a GPG object
+  gpg = gnupg.GPG()
+
+  private_key_file = "{0}_file.gpg".format(type_file)
   password_file = "{0}_password_file.key".format(type_file)
   try:
     password = open(password_file).read()
   except Exception as e:
     logging.error(f"failed get password of {type_file} \n"+str(e))
     #print(f"failed get password of {type_file} \n"+e)
+  #try:
+  #  with open(private_key_file, 'rb') as f:
+  #    key_file = f.read()
+  #except Exception as e:
+  #  logging.error(f"failed get key file of {type_file} \n"+str(e)) 
+
+  #try:
+  #  private_key, _ =pgpy.PGPKey.from_file(private_key_file)
+  #  #private_key, _ =pgpy.PGPKey.from_blob(key_file)
+  #  with private_key.unlock(password) as ukey:
+  #    return (ukey.decrypt(emsg)).message
+  #  logging.info("success decrypt "+namefile)
+  #except Exception as e:
+  #  logging.error("failed when decrypt "+namefile+" \n"+str(e))
+    #print(f"faile when decrypt {emsg} \n"+e)
 
   try:
-    private_key, _ =pgpy.PGPKey.from_file(private_key_file)
-    with private_key.unlock(password) as ukey:
-      return (ukey.decrypt(emsg).message)
-    logging.info("success decrypt "+namefile)
+    gpg.import_keys_file(private_key_file)
+    gpg.list_keys()
+    gpg.decrypt_file("./encrypted/"+namefile,passphrase=password,output="./decrypted/"+namefile)
   except Exception as e:
     logging.error("failed when decrypt "+namefile+" \n"+str(e))
-    #print(f"faile when decrypt {emsg} \n"+e)
+    sys.exit(1)
 
 def rejected(TYPE_PROCESS,NAME_FILES,REJECTED_MESSAGES,REJECTED_VALUE):
 

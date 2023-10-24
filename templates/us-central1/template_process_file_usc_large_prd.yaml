@@ -17,7 +17,7 @@ placement:
       configBucket: mark-vii-conciliacion
       gceClusterConfig:
         metadata:
-          PIP_PACKAGES: PGPy cardutil findspark openpyxl pyxlsb
+          PIP_PACKAGES: PGPy cardutil findspark
         subnetworkUri: default
         serviceAccount: mark-vii-conciliacion@tenpo-datalake-sandbox.iam.gserviceaccount.com
         serviceAccountScopes:
@@ -27,19 +27,27 @@ placement:
       - executableFile: gs://mark-vii-conciliacion/artifacts/dataproc/pip-install.sh
       masterConfig:
         diskConfig:
-          bootDiskSizeGb: 100
+          bootDiskSizeGb: 300
           bootDiskType: pd-ssd
           localSsdInterface: SCSI
-        machineTypeUri: n1-standard-2
+        machineTypeUri: n1-standard-8
         numInstances: 1
       softwareConfig:
         imageVersion: 2.0-debian10
+        properties:
+          spark:spark.driver.memoryOverhead: 7G
+          spark:spark.executor.heartbeatInterval: '200000'
+          spark:spark.executor.memoryOverhead: 7G
+          spark:spark.memory.offHeap.enabled: 'true'
+          spark:spark.memory.offHeap.size: 16g
+          spark:spark.network.timeout: '300000'
+          spark:spark.sql.shuffle.partitions: '32768'
       workerConfig:
         diskConfig:
-          bootDiskSizeGb: 100
+          bootDiskSizeGb: 300
           bootDiskType: pd-ssd
           localSsdInterface: SCSI
-        machineTypeUri: n1-standard-2
+        machineTypeUri: n1-standard-8
         numInstances: 2
 parameters:
 - description: the managed cluster name prefix
